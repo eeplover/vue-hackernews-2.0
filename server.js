@@ -3,6 +3,8 @@ const path = require('path')
 const express = require('express')
 const favicon = require('serve-favicon')
 const compression = require('compression')
+// 因为正则表达式和函数会被 JSON.stringify 忽略，
+// 所以这里使用 serialize-javascript 进行序列化
 const serialize = require('serialize-javascript')
 const resolve = file => path.resolve(__dirname, file)
 
@@ -34,6 +36,13 @@ if (isProd) {
 
 function createRenderer (bundle) {
   // https://github.com/vuejs/vue/blob/dev/packages/vue-server-renderer/README.md#why-use-bundlerenderer
+  // 典型的Node.js应用，服务器是个长时间运行的程序。
+  // 如果我们直接引入一个模块，这个实例化的模块就会被所有请求共享。
+  // 这会给开发带来一些极不方便的限制因素（在不重启服务的情况下）：
+  // 1.我们不得不避免使用任何具有全局性的状态组件(eg:store)
+  // 2.不同请求间调用mutations改变state会相互影响
+  // 所以这里使用createBundleRenderer来确保为每次请求创建一个新的实例。
+  // bundle是一个方法，接受一个渲染上下文对象作为参数，且需要返回一个Promise
   return require('vue-server-renderer').createBundleRenderer(bundle, {
     cache: require('lru-cache')({
       max: 1000,
@@ -55,7 +64,11 @@ const serve = (path, cache) => express.static(resolve(path), {
   maxAge: cache && isProd ? 60 * 60 * 24 * 30 : 0
 })
 
+// 设置压缩级别，降低响应主体的大小，有利于提高响应速度。
 app.use(compression({ threshold: 0 }))
+// favicon即favorite icon，作为网站的图片标识。
+// 浏览器对favicon.ico通常是频繁且不加分析的。
+// 所以这里的作用在于优化（避免该类请求记录日志）和减少（使用缓存）客户端对favicon.ico请求。
 app.use(favicon('./public/logo-48.png'))
 app.use('/service-worker.js', serve('./dist/service-worker.js'))
 app.use('/manifest.json', serve('./manifest.json'))
@@ -63,6 +76,7 @@ app.use('/dist', serve('./dist'))
 app.use('/public', serve('./public'))
 
 app.get('*', (req, res) => {
+  // 对还没初始化完成的请求，返回等待刷新的提示
   if (!renderer) {
     return res.end('waiting for compilation... refresh in a moment.')
   }
@@ -72,6 +86,9 @@ app.get('*', (req, res) => {
 
   var s = Date.now()
   const context = { url: req.url }
+  // 这里使用流式渲染。
+  // 允许HTML一边生成一边写入相应流，而不是在最后一次全部写入。
+  // 其结果是请求服务速度更快，没有缺点！
   const renderStream = renderer.renderToStream(context)
 
   renderStream.once('data', () => {

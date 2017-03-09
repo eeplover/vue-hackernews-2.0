@@ -5,7 +5,8 @@ const clientConfig = require('./webpack.client.config')
 const serverConfig = require('./webpack.server.config')
 
 module.exports = function setupDevServer (app, opts) {
-  // modify client config to work with hot middleware
+  // 通过修改客户端的配置来配合热重载中间件的使用
+  // https://github.com/glenjamin/webpack-hot-middleware
   clientConfig.entry.app = ['webpack-hot-middleware/client', clientConfig.entry.app]
   clientConfig.output.filename = '[name].js'
   clientConfig.plugins.push(

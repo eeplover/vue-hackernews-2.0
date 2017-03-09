@@ -11,6 +11,7 @@ export default context => {
   const s = isDev && Date.now()
 
   // set router's location
+  // 这个方法会向 history 栈添加一个新的记录
   router.push(context.url)
   const matchedComponents = router.getMatchedComponents()
 

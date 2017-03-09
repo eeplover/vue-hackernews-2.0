@@ -1,3 +1,7 @@
+# 前言
+
+vue-hackernews-2.0差不多明确整合了所有主要的Vue库和概念在单个应用中。对于现阶段想要研究 Vue + SSR 的我来说是一个好的轮子。在造轮子过程中碰到的疑问，我都会在相应地方备下详细注释。
+
 # vue-hackernews-2.0
 
 HackerNews clone built with Vue 2.0 + vue-router + vuex, with server-side rendering.

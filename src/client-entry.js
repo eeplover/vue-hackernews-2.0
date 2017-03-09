@@ -1,3 +1,4 @@
+// 这里应该是考虑到兼容性，才引入es6-promise，主要为了兼容IE<9
 import 'es6-promise/auto'
 import { app, store } from './app'
 
