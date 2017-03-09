@@ -44,3 +44,6 @@ npm run build
 # serve in production mode
 npm start
 ```
+
+## Tips
+[Webpack性能评估](https://github.com/webpack/webpack/issues/3216)
